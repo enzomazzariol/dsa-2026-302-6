@@ -1,4 +1,5 @@
 #include "segments.h"
+#include "map.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,15 +37,9 @@ void append_street(StreetNode **head, StreetNode **tail, Street data) {
 
 StreetNode *fetch_streets(const char *map_name)
 {
-  char file_path[256];
-  snprintf(file_path, sizeof(file_path), "maps/%s/streets.txt", map_name);
-
-  FILE *file = fopen(file_path, "r");
+  FILE *file = open_map_file(map_name, "streets.txt");
   if (file == NULL)
-  {
-    printf("[ERROR] Fichero no encontrado o ruta incorrecta: %s\n", file_path);
     return NULL;
-  }
 
   StreetNode *head = init_street_list();
   StreetNode *tail = NULL;
@@ -166,13 +161,10 @@ void print_connected_segments(StreetNode *streets, StreetNode *closest)
     return;
   }
 
-  long long a = closest->data.from_id;
   long long b = closest->data.to_id;
 
   printf("\n    From this street segment, you can go to:\n");
 
-  // primer nivel: nombres unicos de calles que tocan los endpoints del closest
-  // (excluyendo segmentos con el mismo nombre que el propio closest)
   char vistos[256][STREET_NAME_LENGTH];
   int n_vistos = 0;
 
@@ -184,13 +176,8 @@ void print_connected_segments(StreetNode *streets, StreetNode *closest)
     }
 
     long long f = current->data.from_id;
-    long long t = current->data.to_id;
 
-    if (f == a || f == b || t == a || t == b) {
-      if (strcmp(current->data.name, closest->data.name) == 0) {
-        current = current->next;
-        continue;
-      }
+    if (f == b) {
 
       int repetido = 0;
       for (int i = 0; i < n_vistos; i++) {
