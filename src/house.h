@@ -24,7 +24,7 @@ typedef struct {
 HouseNode *init_house_list();
 void append_house(HouseNode **head, HouseNode **tail, House data);
 HouseNode *fetch_houses(const char *map_name);
-void search_house(HouseNode *houses, const char *house_name, int house_number);
+HouseNode *search_house(HouseNode *houses, const char *house_name, int house_number);
 int count_houses(HouseNode *head);
 void free_houses(HouseNode *head);
 

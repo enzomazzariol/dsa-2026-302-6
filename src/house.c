@@ -54,7 +54,7 @@ HouseNode *fetch_houses(const char *map_name)
   return head;
 }
 
-void search_house(HouseNode *houses, const char *house_name, int house_number) {
+HouseNode* search_house(HouseNode *houses, const char *house_name, int house_number) {
   // Expandimos la abreviatura una sola vez antes del loop para no recalcularla en cada iteracion
   char abbr[100];
   abreviaturas(house_name, abbr, sizeof(abbr));
@@ -72,7 +72,7 @@ void search_house(HouseNode *houses, const char *house_name, int house_number) {
       street_found = 1;
       if (current->data.number == house_number) {
         printf("House found: Latitud = %.6f, Longitud = %.6f\n", current->data.latitude, current->data.longitude);
-        return;
+        return current;
       }
     }
     current = current->next;
@@ -93,6 +93,7 @@ void search_house(HouseNode *houses, const char *house_name, int house_number) {
     int new_house_number = 0;
     if (scanf("%d", &new_house_number) == 1) {
       search_house(houses, house_name, new_house_number);
+      return search_house(houses, house_name, new_house_number);
     } else {
       printf("[ERROR] Numero invalido\n");
     }
@@ -147,7 +148,10 @@ void search_house(HouseNode *houses, const char *house_name, int house_number) {
     int opcion = ask_from_suggestions(sugeridas, MAX_SUGERENCIAS);
     if (opcion >= 0)
       search_house(houses, sugeridas[opcion], house_number);
+
   }
+
+  return NULL;
 }
 
 int count_houses(HouseNode *head){ 

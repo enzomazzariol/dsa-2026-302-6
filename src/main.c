@@ -14,8 +14,65 @@ void createaleak() {
 }
 
 // void compare_house_name(*char );
+Destination ask_location(HouseNode *houses, PlaceNode *places, const char *title, const char *question) {
+  Destination dest = {0.0, 0.0, 0};
+  int option;
 
-int main(void) {
+
+  printf("\n---- %s ----\n", title);
+  printf("%s Address (1), Place (2) or Coordinate (3): ", question);
+
+  if (scanf("%d", &option) != 1) return dest;
+
+  switch (option) {
+    case 1: {
+      char street_name[256];
+      int street_number;
+      printf("Enter street name: \n");
+      scanf(" %255[^\n]", street_name);
+      printf("Enter street number: \n");
+      scanf("%d", &street_number);
+
+      HouseNode *found = search_house(houses, street_name, street_number);
+      if (found != NULL) {
+        dest.latitude = found->data.latitude;
+        dest.longitude = found->data.longitude;
+        dest.valid = 1;
+      }
+      break;
+    }
+    case 2: { 
+      char place_name[256];
+      printf("Enter place name (e.g. \"Universitat Pompeu Fabra-Campus del Poblenou\"): \n");
+      scanf(" %255[^\n]", place_name);
+
+      PlaceNode *found = search_place(places, place_name);
+      if (found != NULL) {
+        dest.latitude = found->data.latitude;
+        dest.longitude = found->data.longitude;
+        dest.valid = 1;
+      }
+      break;
+    }
+    case 3: { // COORDINATE
+      printf("Enter latitude and longitude (format: lat,lon): \n");
+      if (scanf("%lf,%lf", &dest.latitude, &dest.longitude) == 2) {
+        dest.valid = 1;
+      } else {
+        printf("[ERROR] Invalid coordinate format.\n");
+      }
+      break;
+    }
+    default:
+      printf("[ERROR] Invalid option.\n");
+      break;
+  }
+
+  return dest;
+}
+
+
+int main(void){
   printf("*****************\nWelcome to DSA!\n*****************\n");
 
   // how to import and call a function
@@ -67,52 +124,34 @@ int main(void) {
   printf("Lugares cargados correctamente para %s, total: %d\n", map_name, total_places);
   printf("Calles cargadas correctamente para %s, total: %d\n", map_name, total_streets);
 
-  int opcion_user = 0;
-  print_map_options();
-  scanf("%d", &opcion_user);
+  Destination origin = ask_location(houses, places, "ORIGIN", "Where are you?");
+  StreetNode *start_street = NULL;
 
-  switch (opcion_user) {
-    case 1: {
-      printf("Enter a street name: \n");
-      char street_name[256];
-      scanf(" %255[^\n]", street_name);
-      
-      printf("Enter a street number: \n");
-      int street_number;
-      if (scanf("%d", &street_number) != 1) {
-        printf("[ERROR] Numero invalido\n");
-        break;
+  if (origin.valid) {
+      start_street = closest_segment(streets, origin.latitude, origin.longitude);
+      if (start_street != NULL) {
+          printf("    You are at: %s\n", start_street->data.name);
       }
-      search_house(houses, street_name, street_number);
-      break;
-    }
-    case 2: {
-      printf("Not implemented yet. Come back later. \n");
-      break;
-    }
-    case 3: {
-      printf("Enter the name of the place: \n");
-      char name_place[256];
-      scanf(" %255[^\n]", name_place);
-      PlaceNode *found = search_place(places, name_place);
-      if (found != NULL) {
-        StreetNode *s = closest_segment(streets, found->data.latitude, found->data.longitude);
-        if (s != NULL) {
-          printf("    Closest street: %s\n", s->data.name);
-          printf("    Between %lld (%.6f, %.6f) and %lld (%.6f, %.6f)\n",
-                 s->data.from_id, s->data.from_latitude, s->data.from_longitude,
-                 s->data.to_id, s->data.to_latitude, s->data.to_longitude);
-          print_connected_segments(streets, s);
-        }
-      }
-      break;
-    }
-    default:
-      free_houses(houses);
-      free_places(places);
-      free_streets(streets);
+  } else {
+      printf("[ERROR] Origen no valido. Saliendo...\n");
+      free_houses(houses); free_places(places); free_streets(streets);
       return 1;
   }
+
+  // --- 2. PREGUNTAMOS EL DESTINO ---
+  Destination destination = ask_location(houses, places, "DESTINATION", "Where do you want to go?");
+  StreetNode *end_street = NULL;
+
+  if (destination.valid) {
+      end_street = closest_segment(streets, destination.latitude, destination.longitude);
+      if (end_street != NULL) {
+          printf("    Destination street: %s\n", end_street->data.name);
+      }
+  } else {
+      printf("[ERROR] Destino no valido. Saliendo...\n");
+      free_houses(houses); free_places(places); free_streets(streets);
+      return 1;
+    }
 
   free_houses(houses);
   free_places(places);

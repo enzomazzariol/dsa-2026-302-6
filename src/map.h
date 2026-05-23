@@ -6,6 +6,12 @@
 #define MAX_SUGERENCIAS 5
 #define MAX_SUGGESTION_LEN 100
 
+typedef struct {
+    double latitude;
+    double longitude;
+    int valid;
+} Destination;
+
 const char *map_name_from_option(int option);
 void print_map_menu(void);
 void print_map_options(void);
