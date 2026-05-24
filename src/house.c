@@ -92,7 +92,6 @@ HouseNode* search_house(HouseNode *houses, const char *house_name, int house_num
     printf("\nEnter the correct house number: ");
     int new_house_number = 0;
     if (scanf("%d", &new_house_number) == 1) {
-      search_house(houses, house_name, new_house_number);
       return search_house(houses, house_name, new_house_number);
     } else {
       printf("[ERROR] Numero invalido\n");
@@ -147,7 +146,7 @@ HouseNode* search_house(HouseNode *houses, const char *house_name, int house_num
     printf("[ERROR] Street not found. Similar streets:\n");
     int opcion = ask_from_suggestions(sugeridas, MAX_SUGERENCIAS);
     if (opcion >= 0)
-      search_house(houses, sugeridas[opcion], house_number);
+      return search_house(houses, sugeridas[opcion], house_number);
 
   }
 

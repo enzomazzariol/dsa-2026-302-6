@@ -3,6 +3,7 @@
 #include "map.h"
 #include "places.h"
 #include "segments.h"
+#include "graph.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -97,6 +98,13 @@ int main(void){
   PlaceNode *places = fetch_places(map_name);
   StreetNode *streets = fetch_streets(map_name);
 
+  IntersectionGraph *graph = graph_init();
+  StreetNode *curr = streets;
+  while (curr != NULL) {
+    graph_insert(graph, curr->data);
+    curr = curr->next;
+  }
+
   if (places == NULL) {
     printf("[ERROR] No se pudieron cargar los lugares\n");
     free_houses(houses);
@@ -131,6 +139,18 @@ int main(void){
       start_street = closest_segment(streets, origin.latitude, origin.longitude);
       if (start_street != NULL) {
           printf("    You are at: %s\n", start_street->data.name);
+
+          // Lab 4: busqueda lineal (mantener para comparacion en el report)
+          print_connected_segments(streets, start_street);
+
+          // Lab 5: busqueda con hashmap
+          SegmentListNode *connected = graph_get(graph, start_street->data.to_id);
+          printf("\n    [Graph] From this street segment, you can go to:\n");
+          SegmentListNode *c = connected;
+          while (c != NULL) {
+              printf("    - %s\n", c->segment.name);
+              c = c->next;
+          }
       }
   } else {
       printf("[ERROR] Origen no valido. Saliendo...\n");
@@ -156,5 +176,6 @@ int main(void){
   free_houses(houses);
   free_places(places);
   free_streets(streets);
+  graph_free(graph);
   return 0;
 }
