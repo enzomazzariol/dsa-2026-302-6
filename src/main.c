@@ -3,6 +3,7 @@
 #include "map.h"
 #include "places.h"
 #include "segments.h"
+#include "path.h"
 #include "graph.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -173,6 +174,11 @@ int main(void){
       return 1;
     }
 
+  printf("\n[INFO] Origin valid: (%.6f, %.6f)\n", origin.latitude, origin.longitude);
+  printf("[INFO] Destination valid: (%.6f, %.6f)\n", destination.latitude, destination.longitude);
+
+  calculate_and_print_path(streets, start_street, end_street);
+  
   free_houses(houses);
   free_places(places);
   free_streets(streets);
