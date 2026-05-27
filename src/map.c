@@ -56,3 +56,60 @@ const char *map_name_from_option(int option) {
       return NULL;
   }
 }
+
+Destination ask_location(HouseNode *houses, PlaceNode *places, const char *title, const char *question) {
+  Destination dest = {0.0, 0.0, 0};
+  int option;
+
+
+  printf("\n---- %s ----\n", title);
+  printf("%s Address (1), Place (2) or Coordinate (3): ", question);
+
+  if (scanf("%d", &option) != 1) return dest;
+
+  switch (option) {
+    case 1: {
+      char street_name[256];
+      int street_number;
+      printf("Enter street name: \n");
+      scanf(" %255[^\n]", street_name);
+      printf("Enter street number: \n");
+      scanf("%d", &street_number);
+
+      HouseNode *found = search_house(houses, street_name, street_number);
+      if (found != NULL) {
+        dest.latitude = found->data.latitude;
+        dest.longitude = found->data.longitude;
+        dest.valid = 1;
+      }
+      break;
+    }
+    case 2: { 
+      char place_name[256];
+      printf("Enter place name (e.g. \"Universitat Pompeu Fabra-Campus del Poblenou\"): \n");
+      scanf(" %255[^\n]", place_name);
+
+      PlaceNode *found = search_place(places, place_name);
+      if (found != NULL) {
+        dest.latitude = found->data.latitude;
+        dest.longitude = found->data.longitude;
+        dest.valid = 1;
+      }
+      break;
+    }
+    case 3: { // COORDINATE
+      printf("Enter latitude and longitude (format: lat,lon): \n");
+      if (scanf("%lf,%lf", &dest.latitude, &dest.longitude) == 2) {
+        dest.valid = 1;
+      } else {
+        printf("[ERROR] Invalid coordinate format.\n");
+      }
+      break;
+    }
+    default:
+      printf("[ERROR] Invalid option.\n");
+      break;
+  }
+
+  return dest;
+}
