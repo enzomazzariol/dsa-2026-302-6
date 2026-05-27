@@ -159,7 +159,7 @@ int main(void){
       return 1;
   }
 
-  // --- 2. PREGUNTAMOS EL DESTINO ---
+  // lab 6: preguntar el destino 
   Destination destination = ask_location(houses, places, "DESTINATION", "Where do you want to go?");
   StreetNode *end_street = NULL;
 
