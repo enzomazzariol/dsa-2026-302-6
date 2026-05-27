@@ -21,13 +21,13 @@ IntersectionGraph *graph_init(){
     return g;
 }
 
-void graph_insert(IntersectionGraph *g, Street s) {
-      int bucket = hash(s.from_id);
+void graph_insert(IntersectionGraph *g, StreetNode *s) {
+      int bucket = hash(s-> data.from_id);
 
       // Buscamos si ya existe una entrada para este intersection_id
       GraphEntry *entry = g->buckets[bucket];
       while (entry != NULL) {
-          if (entry->intersection_id == s.from_id)
+          if (entry->intersection_id == s->data.from_id)
               break;
           entry = entry->next;
       }
@@ -39,7 +39,7 @@ void graph_insert(IntersectionGraph *g, Street s) {
               printf("[ERROR] fallo al crear entrada del grafo\n");
               return;
           }
-          entry->intersection_id = s.from_id;
+          entry->intersection_id = s->data.from_id;
           entry->segments = NULL;
           entry->next = g->buckets[bucket];  // chaining: apunta al anterior frente
           g->buckets[bucket] = entry;

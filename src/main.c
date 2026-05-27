@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 void createaleak() {
   char *foo = malloc(20 * sizeof(char));
@@ -102,7 +103,7 @@ int main(void){
   IntersectionGraph *graph = graph_init();
   StreetNode *curr = streets;
   while (curr != NULL) {
-    graph_insert(graph, curr->data);
+    graph_insert(graph, curr);
     curr = curr->next;
   }
 
@@ -141,15 +142,28 @@ int main(void){
       if (start_street != NULL) {
           printf("    You are at: %s\n", start_street->data.name);
 
+          clock_t start_secuencial=clock();
+
           // Lab 4: busqueda lineal (mantener para comparacion en el report)
           print_connected_segments(streets, start_street);
 
+          clock_t end_secuencial = clock();
+          double time_secuencial = (double)(end_secuencial - start_secuencial) / CLOCKS_PER_SEC * 1000.0;
+          printf("\n>>> TIEMPO SECUENCIAL: %f ms <<<\n", time_secuencial);
+
+          clock_t start_grafo = clock();
+
           // Lab 5: busqueda con hashmap
           SegmentListNode *connected = graph_get(graph, start_street->data.to_id);
+
+          clock_t end_grafo = clock();
+          double time_grafo = (double)(end_grafo - start_grafo) / CLOCKS_PER_SEC * 1000.0;
+          printf(">>> TIEMPO GRAFO: %f ms <<<\n\n", time_grafo);
+          
           printf("\n    [Graph] From this street segment, you can go to:\n");
           SegmentListNode *c = connected;
           while (c != NULL) {
-              printf("    - %s\n", c->segment.name);
+              printf("    - %s\n", c->segment->data.name);
               c = c->next;
           }
       }
@@ -177,7 +191,7 @@ int main(void){
   printf("\n[INFO] Origin valid: (%.6f, %.6f)\n", origin.latitude, origin.longitude);
   printf("[INFO] Destination valid: (%.6f, %.6f)\n", destination.latitude, destination.longitude);
 
-  calculate_and_print_path(streets, start_street, end_street);
+  calculate_and_print_path(graph, streets, start_street, end_street);
   
   free_houses(houses);
   free_places(places);

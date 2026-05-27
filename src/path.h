@@ -2,6 +2,7 @@
 #define PATH_H
 
 #include "segments.h"
+#include "graph.h"
 
 // 1. Estructura para la lista de calles (Path)
 typedef struct {
@@ -22,6 +23,8 @@ typedef struct {
 } Queue;
 
 // Funciones
-void calculate_and_print_path(StreetNode *graph, StreetNode *fromStreet, StreetNode *toStreet);
+void calculate_and_print_path(IntersectionGraph *graph, StreetNode *street_list, StreetNode *fromStreet, StreetNode *toStreet);
+
+StreetList BFS_slow(StreetNode *street_list, StreetNode *fromStreet, StreetNode *toStreet);
 
 #endif

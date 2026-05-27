@@ -7,7 +7,7 @@
 
 // Un segmento dentro de la lista de un nodo del grafo
 typedef struct SegmentListNode {
-    Street segment;
+    StreetNode *segment;
     struct SegmentListNode *next;
 } SegmentListNode;
 
@@ -24,7 +24,7 @@ typedef struct {
 } IntersectionGraph;
 
 IntersectionGraph *graph_init();
-void graph_insert(IntersectionGraph *g, Street s);
+void graph_insert(IntersectionGraph *g, StreetNode *s);
 SegmentListNode *graph_get(IntersectionGraph *g, long long intersection_id);
 void graph_free(IntersectionGraph *g);
 
