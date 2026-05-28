@@ -18,9 +18,9 @@ El programa itera la llista enllaçada fins a trobar el carrer o lloc introduït
 
 ## Runtime complexity analysis of your path-finding algorithm in Big-O.
 
-Per trobar el camí més curt per arribar a la destinació que indica l'usuari, el programa utilitza l'algoritme BFS, a StreetList BFS. Sigui V el nombre de vèrtex (interseccions) i E el nombre de nodes (carrers) la complexitat es la següent:
+Per trobar el camí més curt per arribar a la destinació que indica l’usuari, el programa utilitza l’algoritme BFS a StreetList BFS. Sigui V el nombre de vèrtexs (interseccions) i E el nombre d’arestes (carrers), la complexitat és la següent
 
--Millor cas: O(1). El usuario vol anar des de la posició en la que està, a aquesta mateixa.
+-Millor cas: O(1). L’usuari vol anar des de la posició en què es troba fins a la mateixa posició.
 -Cas mitjà: O(V+E). Per cada carrer que visita el programa mira també les seves interseccions, d'aquesta manera hem de sumar els carrers visitats amb les interseccions d'aquests.
 -Pitjor cas: O(V+E). En aquest cas el programa ha de visitar tots els carrers i per tant les seves interseccions.
 
@@ -56,7 +56,7 @@ per al mapa 6
 >>> TIEMPO SECUENCIAL: 2.973000 ms <<<
 >>> TIEMPO GRAFO: 0.002000 ms <<<
 
-Aquest fet evidència la millora pel que fa a l'eficiència entre la cerca seqüencial i la utilització d'un mapa de interseccions. Aquest fet esta estrictamente relacionat amb la complexitat del primer cas O(n), que ha de recorrer la llista enllaçada fins a trobar l'element, amb la del segon cas O(1), en que es permet l'accés constant.
+Aquest fet evidencia la millora pel que fa a l’eficiència entre la cerca seqüencial i la utilització d’un mapa d’interseccions. Aquest fet està estrictament relacionat amb la complexitat del primer cas, O(n), en què s’ha de recórrer la llista enllaçada fins a trobar l’element, i la del segon cas, O(1), en què es permet l’accés constant.
 
 ##   - A plot comparing the latency to find a path between two points finding connected streets sequentially looking through the list compared to using the intersections map, depending on the map size.- Experimentally determine the results by measuring multiple times your program's behaviour with different relevant scenarios in the same machine. Include your raw data in the report, besides the plot.- Explain the results.
 
@@ -90,6 +90,40 @@ per al mapa 6
 >>> TIEMPO BFS: 0.055000 ms <<<
 >>> TIEMPO BFS_slow: 10587.052000 ms <<<
 
-Aquests resultats evidèncien la millora del temps de l'algoritme utilitzant un graf en comptes d'una llista enllaçada, això si per a un nombre d'elements gran. Als primers casos on hi havia un nombre insignificant de carrers el programa tarda menys en recorrer tota la llista que no fent ús del graf, però a mesura que els valors creixen es veu l'aventatge de l'ús d'un graf.
+Aquests resultats evidencien la millora del temps de l’algoritme utilitzant un graf en comptes d’una llista enllaçada, això sí, per a un nombre d’elements gran. En els primers casos, on hi havia un nombre insignificant de carrers, el programa triga menys a recórrer tota la llista que no pas fent ús del graf, però a mesura que els valors creixen es veu l’avantatge de l’ús d’un graf
 
 ## - A plot comparing the latency to find a path between two points that are close in the map compared to two points that are very far in the map, for different distances. - Experimentally determine the results by measuring multiple times your program's behaviour with different relevant scenarios in the same machine. Include your raw data in the report, besides the plot. - Explain the results.
+
+Per determinar la diferència en la latència per trobar un camí entre dos punts que estan prop i camins que estan més junts, utilitzarem el mapa 6, ja que aquest es el més gran i evidencia més aquest canvi. Per mostrar el fet mostrarem tres casos: carrers que estan conectats, carrers que es troben a una diferència mitjana i carrers que es troben lluny.
+
+-Prop.
+ Des de carrer de calàbria fins a carrer de paris :
+
+>>> TIEMPO BFS: 0.082000 ms <<<
+
+ Des de carrer de Carrer Major fins a Carrer de Sant Jaume:
+
+
+>>> TIEMPO BFS: 0.066000 ms <<<
+
+-Distancia mitja.
+
+Des de Plaça Pau Vila fins a carrer de Còrsega:
+
+>>> TIEMPO BFS: 16.182000 ms <<<
+
+Des de Avinguda de Pau Negre fins a Plaça Major
+
+>>> TIEMPO BFS: 29.118000 ms <<<
+
+-Distancia llunyana.
+
+Des de Autopista la Mediterrània fins a Riera d'en Nofre
+
+>>> TIEMPO BFS: 228.717000 ms <<<
+
+Des de Avinguda de la Unitat fins a carrer de Pepe Rubianes.
+
+>>> TIEMPO BFS: 398.349000 ms <<<
+
+Com podem observar amb aquests resultats la latència es dispara a mesura que creix la distancia, això és deu a la naturalesa del algoritme BFS, que va fent cercles, cada cop més grans fins a trobar la destinació.
