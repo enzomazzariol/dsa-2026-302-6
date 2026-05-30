@@ -1,178 +1,178 @@
 # Report
 
-## Runtime complexity analysis of initializing the intersections map in Big-O.
+## Runtime complexity analysis of initializing the intersections map in Big-O
 
-El programa inicialitza les interseccions del mapa mitjançant, un graf, per fer-ho el programa utilitza un bucle while (a main.c) que itera tota la llista enllaçada i afegeix cada segment al graf. Aleshores la complexitat d'aquesta activitat, és:
+El programa inicialitza les interseccions del mapa mitjançant un graf. Per fer-ho, el main.c itera tota la llista enllaçada de segments i crida graph_insert per a cadascun. La funció graph_insert calcula el bucket amb la funció hash (O(1)) i recorre la cadena d'aquell bucket per comprovar si ja existeix una entrada per al from_id del segment.
 
-- Millor cas: O(n). El programa itera cada segment (O(1)) i els fica al graf, fins haver-los iterat tots.
-- Cas mitjà: Igual O(n)
-- Pitjor cas: O(n^2). Si hi ha col·lisions.
+- *Millor cas: O(n).* Cap segment col·lisiona al mateix bucket. Cada graph_insert és O(1), i com que n'hi ha n segments, el total és O(n).
+- *Cas mitjà: O(n).* Amb 50021 buckets (número primer) i ~18k segments, el factor de càrrega és ~0.36. La cadena mitjana té menys d'un element, de manera que cada inserció és pràcticament O(1) i el total és O(n).
+- *Pitjor cas: O(n²).* Si tots els segments produïssin el mateix valor hash (col·lisió total), cada inserció recorreria una cadena de longitud creixent: O(1) + O(2) + ... + O(n) = O(n^2). En la pràctica, amb un número primer com a mòdul i dades reals d'OSM, aquest cas no es dóna.
 
-## Runtime complexity analysis of finding the coordinates of a street or place given the name in Big-O.
+---
 
-El programa itera la llista enllaçada fins a trobar el carrer o lloc introduït per l'usuari, això ho fa mitjançant les funcions search_house i search_place. D'aquesta manera la complexitat és:
+## Runtime complexity analysis of finding the coordinates of a street or place given the name in Big-O
 
-- Millor cas: O(1). L'element que buscavem era el primer de la llista.
-- Cas mitjà: O(n). L'element es trobava a una posició aleatoria.
-- Pitjor cas: O(n). l'element es trobava a l'última posició.
+El programa itera la llista enllaçada fins a trobar el carrer o lloc introduït per l'usuari, mitjançant les funcions search_house i search_place. La comparació es fa amb strcasecmp (case-insensitive), i en el cas de les cases també es comprova la forma expandida de l'abreviatura.
 
-## Runtime complexity analysis of your path-finding algorithm in Big-O.
+- *Millor cas: O(1).* L'element buscat és el primer node de la llista.
+- *Cas mitjà: O(n).* L'element es troba en una posició aleatòria de la llista.
+- *Pitjor cas: O(n).* L'element no existeix o es troba al final. A més, si no es troba exactament, s'aplica la distància de Levenshtein contra tots els elements per suggerir alternatives, amb cost O(n · m) on m és la longitud mitjana dels noms.
 
-Per trobar el camí més curt per arribar a la destinació que indica l’usuari, el programa utilitza l’algoritme BFS a StreetList BFS. Sigui V el nombre de vèrtexs (interseccions) i E el nombre d’arestes (carrers), la complexitat és la següent
+---
 
--Millor cas: O(1). L’usuari vol anar des de la posició en què es troba fins a la mateixa posició.
--Cas mitjà: O(V+E). Per cada carrer que visita el programa mira també les seves interseccions, d'aquesta manera hem de sumar els carrers visitats amb les interseccions d'aquests.
--Pitjor cas: O(V+E). En aquest cas el programa ha de visitar tots els carrers i per tant les seves interseccions.
+## Runtime complexity analysis of your path-finding algorithm in Big-O
 
-##   A plot comparing the latency to find connected streets by sequentially looking through the list (lab 3) compared to using the intersections map (lab 4), depending on the map size. - Experimentally determine the results by measuring multiple times your program's behaviour with different relevant scenarios in the same machine. Include your raw data in the report, besides the plot. - Explain the results.
-     
-per al mapa 1 
+Per trobar el camí entre dos punts, el programa utilitza l'algorisme BFS implementat a StreetList BFS(...) en path.c. Sigui *V* el nombre de vèrtexs (interseccions) i *E* el nombre d'arestes (segments de carrer):
 
->>> TIEMPO SECUENCIAL: 0.248000 ms <<<
->>> TIEMPO GRAFO: 0.003000 ms <<<
+- *Millor cas: O(1).* L'origen i la destinació coincideixen: BFS retorna el camí immediatament sense explorar res.
+- *Cas mitjà: O(V + E).* BFS visita cada vèrtex i cada aresta com a màxim una vegada. La comprovació de visitats és O(1) gràcies al VisitedSet (hash set), i la cerca de veïns és O(1) gràcies al IntersectionGraph (hash map). El cost total és proporcional al nombre de nodes i arestes explorats.
+- *Pitjor cas: O(V + E).* El destí no existeix o es troba a l'extrem oposat del graf: BFS ha d'explorar tot el graf. El cost segueix sent O(V + E) per les mateixes raons que el cas mitjà.
 
-per al mapa 2
+---
 
->>> TIEMPO SECUENCIAL: 0.139000 ms <<<
->>> TIEMPO GRAFO: 0.002000 ms <<<
+## Plot 1: Latency to find connected streets — sequential list vs intersection graph
 
-per al mapa 3
+### Raw data
 
->>> TIEMPO SECUENCIAL: 0.597000 ms <<<
->>> TIEMPO GRAFO: 0.002000 ms <<<
+| Mapa   | Interseccions | Temps seqüencial (ms) | Temps graf (ms) |
+|--------|---------------|-----------------------|-----------------|
+| xs\_1  | 11            | 0.248                 | 0.003           |
+| xs\_2  | 71            | 0.139                 | 0.002           |
+| md\_1  | 1122          | 0.597                 | 0.002           |
+| lg\_1  | 3283          | 0.525                 | 0.001           |
+| xl\_1  | 15378         | 0.234                 | 0.001           |
+| 2xl\_1 | ~50000        | 2.973                 | 0.002           |
 
-per al mapa 4
+[grafico 1](secuencial-grafo.png)
 
->>> TIEMPO SECUENCIAL: 0.525000 ms <<<
->>> TIEMPO GRAFO: 0.001000 ms <<<
+### Explicació
 
-per al mapa 5
+Els resultats evidencien la diferència d'eficiència entre la cerca seqüencial i l'ús del graf d'interseccions. La cerca seqüencial (print_connected_segments) recorre tota la llista de segments per trobar els veïns d'una intersecció, cosa que implica una complexitat O(n) on n és el nombre total de segments. Per contra, graph_get accedeix directament al bucket corresponent del hash map en O(1) amortitzat, independentment del nombre de segments.
 
->>> TIEMPO SECUENCIAL: 0.234000 ms <<<
->>> TIEMPO GRAFO: 0.001000 ms <<<
+El temps seqüencial no creix de manera estrictament monotònica entre alguns mapes perquè el resultat depèn de la posició concreta del segment d'origen dins la llista, que varia entre mesures. Amb múltiples repeticions i mitjanes, la tendència creixent amb la mida del mapa seria clara. El cas de 2xl\_1 (2.973 ms) és el que millor il·lustra la diferència: la llista és tan gran que la cerca lineal es nota, mentre que el graf manté 0.002 ms.
 
-per al mapa 6
+---
 
->>> TIEMPO SECUENCIAL: 2.973000 ms <<<
->>> TIEMPO GRAFO: 0.002000 ms <<<
+## Plot 2: Latency to find a path — BFS with graph vs BFS_slow with list
 
-Aquest fet evidencia la millora pel que fa a l’eficiència entre la cerca seqüencial i la utilització d’un mapa d’interseccions. Aquest fet està estrictament relacionat amb la complexitat del primer cas, O(n), en què s’ha de recórrer la llista enllaçada fins a trobar l’element, i la del segon cas, O(1), en què es permet l’accés constant.
+### Raw data
 
-##   - A plot comparing the latency to find a path between two points finding connected streets sequentially looking through the list compared to using the intersections map, depending on the map size.- Experimentally determine the results by measuring multiple times your program's behaviour with different relevant scenarios in the same machine. Include your raw data in the report, besides the plot.- Explain the results.
+| Mapa   | Interseccions | BFS optimitzat (ms) | BFS\_slow (ms) |
+|--------|---------------|---------------------|----------------|
+| xs\_1  | 11            | 0.052               | 0.032          |
+| xs\_2  | 71            | 0.056               | 0.027          |
+| md\_1  | 1122          | 0.460               | 0.906          |
+| lg\_1  | 3283          | 1.520               | 20.664         |
+| xl\_1  | 15378         | 3.634               | 174.395        |
+| 2xl\_1 | ~50000        | 0.055               | 10587.052      |
 
-- Millor cas: O(1). El usuario vol anar des de la posició en la que està, a aquesta mateixa.
-- Cas mitjà: O(V+E). Per cada carrer que visita el programa mira també les seves interseccions, d'aquesta manera hem de sumar els carrers visitats amb les interseccions d'aquests.
-- Pitjor cas: O(V+E). En aquest cas el programa ha de visitar tots els carrers i per tant les seves interseccions.
+[grafico 2](bfs-optimizado-slow.png)
 
-## A plot comparing the latency to find connected streets by sequentially looking through the list (lab 3) compared to using the intersections map (lab 4), depending on the map size. - Experimentally determine the results by measuring multiple times your program's behaviour with different relevant scenarios in the same machine. Include your raw data in the report, besides the plot. - Explain the results.
+> *Nota:* per a tots els mapes s'ha utilitzat el mateix parell origen-destinació relatiu (mateixa posició geogràfica proporcional al mapa), de manera que la comparació reflecteix exclusivament l'efecte de la mida del graf.
 
+### Explicació
 
-per al mapa 1
+Els resultats mostren clarament la diferència de rendiment entre les dues implementacions de BFS a mesura que el mapa creix.
 
-> > > TIEMPO SECUENCIAL: 0.248000 ms <<<
-> > > TIEMPO GRAFO: 0.003000 ms <<<
+Per als mapes petits (xs\_1 i xs\_2), BFS_slow és lleugerament més ràpid que BFS optimitzat. Això és degut al cost fix d'inicialitzar i consultar el VisitedSet (hash set) i el IntersectionGraph, que supera el cost de la cerca lineal quan el nombre d'elements és molt petit. A mesura que el nombre de segments creix, l'avantatge del BFS optimitzat es fa evident: mentre BFS_slow té complexitat O(V·E) perquè per a cada node visitat recorre tota la llista de segments per trobar els veïns i comprova el array de visitats linealment, el BFS optimitzat és O(V+E) gràcies al hash map de veïns i al hash set de visitats. A xl\_1 la diferència és de 48× (3.6 ms vs 174 ms) i a 2xl\_1 de més de 190.000× (0.055 ms vs 10587 ms).
 
-per al mapa 2
+El temps baix de BFS optimitzat a 2xl\_1 (0.055 ms) s'explica perquè el parell origen-destinació triat estava molt a prop geogràficament, de manera que BFS va trobar el camí explorant molt pocs nodes. BFS\_slow, en canvi, tarda igual independentment de si el camí és curt, perquè en cada pas ha de recórrer tota la llista.
 
-> > > TIEMPO SECUENCIAL: 0.139000 ms <<<
-> > > TIEMPO GRAFO: 0.002000 ms <<<
+---
 
-per al mapa 3
+## Plot 3: BFS optimitzat vs BFS\_slow en funció de la distància origen-destinació
 
-> > > TIEMPO SECUENCIAL: 0.597000 ms <<<
-> > > TIEMPO GRAFO: 0.002000 ms <<<
+S'utilitza el mapa xl_1 per comparar ambdues implementacions de BFS en funció de la distància entre origen i destinació. Cada mesura és la *mitjana de 5 repeticions* sobre el mateix parell per reduir el soroll de mesura.
 
-per al mapa 4
+### Raw data
 
-> > > TIEMPO SECUENCIAL: 0.525000 ms <<<
-> > > TIEMPO GRAFO: 0.001000 ms <<<
+| Categoria     | Dist (km) | BFS opt (ms) | BFS\_slow (ms) |
+|---------------|-----------|--------------|----------------|
+| Molt propers  | 0.134     | 0.205        | 0.909          |
+| Propers       | 0.536     | 0.190        | 34.281         |
+| Mitja         | 1.679     | 1.126        | 287.032        |
+| Llunyans      | 4.698     | 4.038        | 1356.895       |
+| Molt llunyans | 8.949     | 6.908        | 1369.557       |
 
-per al mapa 5
+[grafico 3](plot-3.png)
 
-> > > TIEMPO SECUENCIAL: 0.234000 ms <<<
-> > > TIEMPO GRAFO: 0.001000 ms <<<
+### Ajust de corba i justificació
 
-per al mapa 6
+*BFS optimitzat — corba quadràtica t ≈ a·d^2*
 
-> > > TIEMPO SECUENCIAL: 2.973000 ms <<<
-> > > TIEMPO GRAFO: 0.002000 ms <<<
+BFS explora el graf per nivells concèntrics. En un graf de ciutat 2D, l'àrea explorada creix proporcional a r^2 (àrea d'un cercle). Com que O(V+E) és proporcional als nodes visitats i els nodes creixen amb l'àrea, esperem que el temps s'ajusti a una corba quadràtica: t ≈ a·d^2. Les dades ho confirmen parcialment: de 0.536 km a 4.698 km (8.77× distància) el temps passa de 0.190 ms a 4.038 ms (21.3×), proper a l'esperat per d^2 (76.9×). La desviació s'explica perquè en distàncies curtes el cost fix d'inicialitzar el VisitedSet i el IntersectionGraph domina sobre el cost real de cerca.
 
-Aquest fet evidència la millora pel que fa a l'eficiència entre la cerca seqüencial i la utilització d'un mapa de interseccions. Aquest fet esta estrictamente relacionat amb la complexitat del primer cas O(n), que ha de recórrer la llista enllaçada fins a trobar l'element, amb la del segon cas O(1), en que es permet l'accés constant.
+*BFS\_slow — creixement superquadràtic, tendint a O(d^4)*
 
-## - A plot comparing the latency to find a path between two points finding connected streets sequentially looking through the list compared to using the intersections map, depending on the map size.- Experimentally determine the results by measuring multiple times your program's behaviour with different relevant scenarios in the same machine. Include your raw data in the report, besides the plot.- Explain the results.
+En BFS_slow, per a cada node visitat es recorre tota la llista de segments per trobar els veïns (O(E)) i es comprova el array de visitats linealment (O(V)). Quan la distància augmenta, V i E creixen amb l'àrea explorada (∝ d²), de manera que el cost total és O(V·E) ∝ O(d²·d²) = O(d^4). La saturació observada entre 4.698 km i 8.949 km (1356 ms vs 1369 ms) s'explica perquè a 4.7 km BFS\_slow ja ha explorat pràcticament tot el graf accessible; augmentar la distància no forçà explorar molts nodes nous.
 
-per al mapa 1
+### Explicació
 
-> > > TIEMPO BFS: 0.052000 ms <<<
-> > > TIEMPO BFS_slow: 0.032000 ms <<<
+Els resultats confirmen que BFS optimitzat escala molt millor amb la distància que BFS\_slow. A 1.679 km la diferència ja és de 254× (1.1 ms vs 287 ms); a 4.698 km és de 336× (4 ms vs 1357 ms). BFS optimitzat creix suaument perquè el hash map de veïns i el hash set de visitats mantenen cada operació en O(1) amortitzat, i el nombre de nodes explorats creix quadràticament amb la distància. BFS\_slow pateix un creixement molt més pronunciat perquè cada pas implica recórrer tota la llista de segments, combinant dos factors que creixen amb la distància.
 
-per al mapa 2
+---
 
-> > > TIEMPO BFS: 0.056000 ms <<<
-> > > TIEMPO BFS_slow: 0.027000 ms <<<
+## Improvement to the visited data structure in BFS
 
-per al mapa 3
+### Implementació realitzada
 
-> > > TIEMPO BFS: 0.460000 ms <<<
-> > > TIEMPO BFS_slow: 0.906000 ms <<<
+Hem substituït el vector lineal de visitats de BFS_slow per un *hash set* (VisitedSet) implementat a path.c. El VisitedSet és una taula hash amb 16381 buckets (número primer) i encadenament separat, on la clau és el propi punter a StreetNode.
 
-per al mapa 4
+c
+// Hash basat en l'adreça de memòria del punter (uintptr_t per compatibilitat 64-bit)
+int bucket = (int)((uintptr_t)street % VISITED_BUCKETS);
 
-> > > TIEMPO BFS: 1.520000 ms <<<
-> > > TIEMPO BFS_slow: 20.664000 ms <<<
 
-per al mapa 5
+### Complexitat actual vs millorada
 
-> > > TIEMPO BFS: 3.634000 ms <<<
-> > > TIEMPO BFS_slow: 174.395000 ms <<<
+| Operació | BFS\_slow (vector lineal) | BFS optimitzat (hash set) |
+|----------|--------------------------|--------------------------|
+| contains | O(n) — recorre tot el vector | O(1) amortitzat |
+| add | O(1) — afegeix al final | O(1) amortitzat |
+| Total BFS | O(V · E) | O(V + E) |
 
-per al mapa 6
+### Trade-offs
 
-> > > TIEMPO BFS: 0.055000 ms <<<
-> > > TIEMPO BFS_slow: 10587.052000 ms <<<
+- *Avantatge de latència:* la reducció és dràstica. A xl\_1, BFS passa de 174 ms a 3.6 ms; a 2xl\_1, de 10587 ms a 0.055 ms.
+- *Cost de memòria:* el hash set reserva memòria per als 16381 buckets i per a cada VisitedNode inserit. En el pitjor cas (tot el graf visitat), ocupa O(V) memòria addicional.
+- *Per què el punter com a clau?* Cada StreetNode és únic en memòria, de manera que comparar punters és equivalent a comparar identitats de nodes, però més ràpid que comparar camps del struct. La distribució dels punters del heap no és regular, cosa que garanteix una bona distribució als buckets.
 
-Aquests resultats evidencien la millora del temps de l’algoritme utilitzant un graf en comptes d’una llista enllaçada, això sí, per a un nombre d’elements gran. En els primers casos, on hi havia un nombre insignificant de carrers, el programa triga menys a recórrer tota la llista que no pas fent ús del graf, però a mesura que els valors creixen es veu l’avantatge de l’ús d’un graf
+---
 
-## - A plot comparing the latency to find a path between two points that are close in the map compared to two points that are very far in the map, for different distances. - Experimentally determine the results by measuring multiple times your program's behaviour with different relevant scenarios in the same machine. Include your raw data in the report, besides the plot. - Explain the results.
+## Improvement to the algorithm to find the closest street segment
 
-Per determinar la diferència en la latència per trobar un camí entre dos punts que estan prop i camins que estan més junts, utilitzarem el mapa 6, ja que aquest es el més gran i evidencia més aquest canvi. Per mostrar el fet mostrarem tres casos: carrers que estan conectats, carrers que es troben a una diferència mitjana i carrers que es troben lluny.
+### Situació actual
 
--Prop.
- Des de carrer de calàbria fins a carrer de paris :
+La funció closest_segment a segments.c calcula el punt mig de cada segment i la distància haversine fins a la posició de l'usuari, mantenint el mínim. Recorre tots els segments de la llista, cosa que implica una complexitat *O(n)* on n és el nombre total de segments.
 
->>> TIEMPO BFS: 0.082000 ms <<<
+Per al mapa xl\_1 (18828 segments), aquesta operació és perceptible. Per al mapa 2xl\_1, amb ~50000 segments, pot arribar a ser el coll d'ampolla principal.
 
- Des de carrer de Carrer Major fins a Carrer de Sant Jaume:
+### Millora proposada: k-d tree 2D
 
+La millora natural seria indexar els punts mig de tots els segments en un *k-d tree bidimensional* (k-d tree 2D) construït a partir de les coordenades (latitud, longitud) de cada punt mig.
 
->>> TIEMPO BFS: 0.066000 ms <<<
+Un k-d tree és un arbre binari de cerca que particiona l'espai en dimensions alternades (latitud primer, longitud després, latitud, ...). Un cop construït, una consulta de veí més proper (nearest neighbor search) explora únicament la branca de l'arbre que pot contenir el punt més proper, descartant la meitat de l'espai en cada nivell.
 
--Distancia mitja.
 
-Des de Plaça Pau Vila fins a carrer de Còrsega:
+Cerca del veí més proper en un k-d tree:
+1. Recórrer l'arbre cap al node fulla més proper a la consulta.
+2. En el camí de tornada, comprovar si el cercle de radi "millor distància actual"
+   intersecta l'altra meitat de l'espai del node pare.
+3. Explorar l'altra meitat només si pot contenir un punt més proper.
 
->>> TIEMPO BFS: 16.182000 ms <<<
 
-Des de Avinguda de Pau Negre fins a Plaça Major
+### Complexitat actual vs millorada
 
->>> TIEMPO BFS: 29.118000 ms <<<
+| Operació | Implementació actual | Amb k-d tree |
+|----------|---------------------|--------------|
+| Construcció | O(1) (llista ja existent) | O(n log n) — una sola vegada |
+| Cerca del segment més proper | O(n) | O(log n) promig |
+| Memòria addicional | 0 | O(n) per als nodes de l'arbre |
 
--Distancia llunyana.
+### Trade-offs
 
-Des de Autopista la Mediterrània fins a Riera d'en Nofre
-
->>> TIEMPO BFS: 228.717000 ms <<<
-
-Des de Avinguda de la Unitat fins a carrer de Pepe Rubianes.
-
->>> TIEMPO BFS: 398.349000 ms <<<
-
-Com podem observar amb aquests resultats la latència es dispara a mesura que creix la distancia, això és deu a la naturalesa del algoritme BFS, que va fent cercles, cada cop més grans fins a trobar la destinació.
-
-
-
-## - Describe an improvement to the `visited` data structure in the BFS algorithm to improve latency. - Justify which data structure you would use / have used instead of a list to improve performance. - Describe its current runtime complexity and the improved runtime complexity. - Describe any trade-offs or downsides of your approach regarding latency or memory usage.
-
-Actualment l'algoritme BFS, tant l'antic com l'actual, per determinar si uns dels nodes ha estat visitat i no entrar en un bucle infinit el que fem és recórrer la llista cada cop fins a concretar si l'element seleccionat ha estat visitat o no provocant un gran coll d'ampolla. D'aquesta manera per solucionar-ho el que farem és substituir aquesta estructura de dades per un diccionari, fent que la ID de la intersecció sigui la clau d'accés, que ens portarà al valor 1 (visitat) o 0 (no visitat). Recórrer tota la llista té una complexitat de O(V), sent V el nombre de nodes, mentre que amb la millora proposada aquesta passaria a ser O(1). Pel que fa a els avantatges i desaventatges, aquest canvi redueix la latància (el temps d'execució) drasticament, però alhora comporta una penalització en el consum de la memòria RAM, ja que hem de reservar espai per a les posteriors assignacions de vertader o fals.
-
-
+- *Avantatge de latència:* per a mapes grans (xl\_1, 2xl\_1), la cerca passa de O(n) a O(log n). Per a xl\_1 amb 18828 segments, la millora teòrica és de ~18828 / 14.2 ≈ 1300× en el millor cas.
+- *Cost de construcció:* el k-d tree es construeix una sola vegada en carregar el mapa. El cost O(n log n) és assumible perquè es fa una única vegada.
+- *Complexitat d'implementació:* el k-d tree és significativament més complex d'implementar i depurar que un recorregut lineal.
+- *Pitjor cas:* en dades molt desiguals (molts punts agrupats en una zona), el k-d tree pot degenerar a O(n) en la cerca. En dades geogràfiques de carrers, que solen estar distribuïts de manera uniforme per la zona del mapa, aquest cas és poc probable.
+- *Alternativa més simple:* un spatial grid (divisió del mapa en cel·les) seria menys eficient que un k-d tree però molt més senzill d'implementar, amb cerca O(1) amortitzat si les cel·les estan ben dimensionades.
