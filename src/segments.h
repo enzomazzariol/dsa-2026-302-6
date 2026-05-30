@@ -23,6 +23,7 @@ StreetNode *init_street_list();
 void append_street(StreetNode **head, StreetNode **tail, Street data);
 StreetNode *fetch_streets(const char *map_name);
 int count_streets(StreetNode *head);
+double haversine(double lat1, double lon1, double lat2, double lon2);
 StreetNode *closest_segment(StreetNode *streets, double latitude, double longitude);
 void print_connected_segments(StreetNode *streets, StreetNode *closest);
 void free_streets(StreetNode *head);

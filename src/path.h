@@ -25,6 +25,7 @@ typedef struct {
 // Funciones
 void calculate_and_print_path(IntersectionGraph *graph, StreetNode *street_list, StreetNode *fromStreet, StreetNode *toStreet);
 
+StreetList BFS(IntersectionGraph *mapa_intersecciones, StreetNode *fromStreet, StreetNode *toStreet);
 StreetList BFS_slow(StreetNode *street_list, StreetNode *fromStreet, StreetNode *toStreet);
 
 #endif
