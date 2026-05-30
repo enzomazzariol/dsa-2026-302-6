@@ -4,7 +4,60 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <stdint.h>
 #include "graph.h"
+
+#define VISITED_BUCKETS 16381
+
+typedef struct VisitedNode {
+    StreetNode *street;
+    struct VisitedNode *next;
+} VisitedNode;
+
+typedef struct {
+    VisitedNode *buckets[VISITED_BUCKETS];
+} VisitedSet;
+
+// inicializacion de nodos visitados como una tabla hash con chaining
+static VisitedSet *visited_set_init() {
+    VisitedSet *vs = malloc(sizeof(VisitedSet));
+    for (int i = 0; i < VISITED_BUCKETS; i++)
+        vs->buckets[i] = NULL;
+    return vs;
+}
+
+// comprobar si un nodo fue visitado buscando su puntero en el bucket correspondiente
+static int visited_set_contains(VisitedSet *vs, StreetNode *street) {
+    int bucket = (int)((uintptr_t)street % VISITED_BUCKETS);
+    VisitedNode *node = vs->buckets[bucket];
+    while (node != NULL) {
+        if (node->street == street) return 1;
+        node = node->next;
+    }
+    return 0;
+}
+
+// insertar un nodo al principio del bucket O(1)
+static void visited_set_add(VisitedSet *vs, StreetNode *street) {
+    int bucket = (int)((uintptr_t)street % VISITED_BUCKETS);
+    VisitedNode *node = malloc(sizeof(VisitedNode));
+    node->street = street;
+    node->next = vs->buckets[bucket];
+    vs->buckets[bucket] = node;
+}
+
+// liberar toda la memoria usada por el conjunto de visitados
+static void visited_set_free(VisitedSet *vs) {
+    for (int i = 0; i < VISITED_BUCKETS; i++) {
+        VisitedNode *node = vs->buckets[i];
+        while (node != NULL) {
+            VisitedNode *next = node->next;
+            free(node);
+            node = next;
+        }
+    }
+    free(vs);
+}
 
 #define EARTH_RADIUS 6371.0
 
@@ -36,6 +89,7 @@ static const char *turn_direction(StreetNode *prev, StreetNode *next) {
     return "straight";
 }
 
+// añadimos un path al final de la cola (necesario para que BFS explore nivel por nivel)
 void enqueue(Queue *q, StreetList path)
 {
     QueueNode *node = malloc(sizeof(QueueNode));
@@ -72,6 +126,7 @@ StreetList dequeue(Queue *q)
     return path;
 }
 
+// BFS optimizado: usamos el grafo de intersecciones para encontrar vecinos en O(1) en vez de recorrer toda la lista
 StreetList BFS(IntersectionGraph *mapa_intersecciones, StreetNode *fromStreet, StreetNode *toStreet)
 {
     Queue q = {NULL, NULL};
@@ -84,42 +139,28 @@ StreetList BFS(IntersectionGraph *mapa_intersecciones, StreetNode *fromStreet, S
 
     enqueue(&q, initial_path);
 
-    int total_streets = 50000;
-    StreetNode **visited = malloc(total_streets * sizeof(StreetNode *));
-    int visited_count = 0;
+    VisitedSet *visited = visited_set_init();
 
     while (q.head != NULL)
     {
-
         StreetList path = dequeue(&q);
 
         StreetNode *current_street = path.streets[path.count - 1];
 
         if (current_street == toStreet)
         {
-
             while (q.head != NULL)
             {
                 StreetList p = dequeue(&q);
                 free(p.streets);
             }
-            free(visited);
+            visited_set_free(visited);
             return path;
         }
 
-        int is_visited = 0;
-        for (int i = 0; i < visited_count; i++)
+        if (!visited_set_contains(visited, current_street))
         {
-            if (visited[i] == current_street)
-            {
-                is_visited = 1;
-                break;
-            }
-        }
-
-        if (!is_visited)
-        {
-            visited[visited_count++] = current_street;
+            visited_set_add(visited, current_street);
 
             long long t_id = current_street->data.to_id;
 
@@ -127,45 +168,29 @@ StreetList BFS(IntersectionGraph *mapa_intersecciones, StreetNode *fromStreet, S
             while (vecinos != NULL)
             {
                 StreetNode *conn = vecinos->segment;
-                if (conn != current_street)
+                if (conn != current_street && !visited_set_contains(visited, conn))
                 {
+                    StreetList new_path;
+                    new_path.count = path.count + 1;
+                    new_path.streets = malloc(new_path.count * sizeof(StreetNode *));
 
-                    int conn_visited = 0;
-                    for (int i = 0; i < visited_count; i++)
-                    {
-                        if (visited[i] == conn)
-                        {
-                            conn_visited = 1;
-                            break;
-                        }
-                    }
+                    for (int i = 0; i < path.count; i++)
+                        new_path.streets[i] = path.streets[i];
+                    new_path.streets[path.count] = conn;
 
-                    if (!conn_visited)
-                    {
-                        StreetList new_path;
-                        new_path.count = path.count + 1;
-                        new_path.streets = malloc(new_path.count * sizeof(StreetNode *));
-
-                        for (int i = 0; i < path.count; i++)
-                        {
-                            new_path.streets[i] = path.streets[i];
-                        }
-                        new_path.streets[path.count] = conn;
-
-                        enqueue(&q, new_path);
-                    }
+                    enqueue(&q, new_path);
                 }
-
                 vecinos = vecinos->next;
             }
         }
         free(path.streets);
     }
 
-    free(visited);
+    visited_set_free(visited);
     return no_path;
 }
 
+// calcular el camino con ambos BFS, se comparan tiempos y se imprimen las instrucciones de navegación agrupando segmentos por nombre de calle
 void calculate_and_print_path(IntersectionGraph *graph, StreetNode *street_list, StreetNode *fromStreet, StreetNode *toStreet)
 {
     if (fromStreet == NULL || toStreet == NULL)
@@ -223,6 +248,7 @@ void calculate_and_print_path(IntersectionGraph *graph, StreetNode *street_list,
     }
 }
 
+// version lenta de BFS: busca vecinos recorriendo toda la lista de calles en cada paso
 StreetList BFS_slow(StreetNode *street_list, StreetNode *fromStreet, StreetNode *toStreet)
 {
     Queue q = {NULL, NULL};
